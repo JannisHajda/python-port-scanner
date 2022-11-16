@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import socket
 import sys
+import errno
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -17,9 +18,13 @@ def connect_scan(target_host, target_port):
         print("Port %d: Open" % target_port)
         # close the socket
         s.close()
-    except:
-        # connection failed -> port is closed
-        return
+    except socket.timeout:
+        # connection timed out -> port is filtered
+        print("Port %d: Filtered" % target_port)
+    except socket.error as e:
+        if e.errno == errno.ECONNREFUSED:
+            # connection refused -> port is closed
+            print("Port %d: Closed" % target_port)
 
 
 def parse_ports(ports):
